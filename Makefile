@@ -2,7 +2,10 @@
 default: build
 
 build: 
-	docker build -t whiting/training -f Dockerfile .
+	docker build -t dai-training -f Dockerfile .
+
+run:
+	docker run -it -u h2o:h2o dai-training /bin/bash
 
 #fetch:
 #	mkdir -p s3
