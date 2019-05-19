@@ -49,6 +49,25 @@ RUN \
 
 ENV PATH="${HOME}/miniconda3/bin/:$PATH"
 
+# Create conda environment for scoring
+ENV CONDA="scoring_h2oai_experiment"
+RUN \
+  conda config --env --add channels conda-forge && \
+  conda create --name ${CONDA} \
+      python=3.6.5 \
+      filelock=3.0.4 \
+      numpy=1.15.1 \
+      pandas=0.24.1 \
+      pycryptodome=3.6.6 \
+      requests=2.20.0  \
+      scikit-learn=0.19.1 \
+      scipy=1.1.0 \
+      setproctitle=1.1.10 \
+      statsmodels=0.9.0 \
+      toml=0.9.4 \
+      tornado=4.4.2 \
+      thrift=0.11.0
+
 # Make license file directory
 RUN \
   mkdir ${HOME}/.driverlessai
@@ -61,7 +80,11 @@ COPY --chown=h2o docker/scorer.zip ${HOME}/
 COPY --chown=h2o docker/card_aws_lambda.sh ${HOME}/
 COPY --chown=h2o docker/card_test.json ${HOME}/
 
-COPY --chown=h2o /Users/dwhiting/H2O/license.sig ${HOME}/.driverlessai/
+#COPY --chown=h2o docker/license.sig ${HOME}/.driverlessai/
+
+# Scoring-pipeline
+#RUN \
+#  unzip scorer.zip
 
 #
 #
