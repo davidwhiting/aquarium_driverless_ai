@@ -1,11 +1,19 @@
+NAME = dai-training
+USER = h2oai
 
-default: build
+default: buildclean
 
 build: 
-	docker build -t dai-training -f Dockerfile .
+	docker build -t ${NAME} -f Dockerfile .
+
+buildnew: 
+	docker build --no-cache --pull -t ${NAME} -f Dockerfile .
+
+buildclean:
+	docker build --no-cache -t ${NAME} -f Dockerfile .
 
 run:
-	docker run -it -u h2o:h2o dai-training /bin/bash
+	docker run -it --rm -u ${USER}:${USER} ${NAME} /bin/bash
 
 #fetch:
 #	mkdir -p s3
@@ -13,9 +21,6 @@ run:
 
 #build: fetch
 #	docker build -t opsh2oai/h2o-training -f Dockerfile .
-
-#run:
-#	docker run --init --rm -u h2o:h2o -p 4040:4040 -p 8787:8787 -p 8888:8888 -p 54321-54399:54321-54399 opsh2oai/h2o-training
 
 #save:
 #	docker save opsh2oai/h2o-training | pigz -c > h2o-training.gz

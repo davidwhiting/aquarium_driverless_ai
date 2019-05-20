@@ -1,14 +1,18 @@
 FROM ubuntu:18.04
 LABEL maintainer="david.whiting@h2o.ai"
 
+SHELL ["/bin/bash", "-c"]
+
 # Linux
 RUN \
   apt-get -y update && \
   apt-get -y install \
     wget \
+    less \
     libopenblas-dev \
     opencl-headers \
     clinfo \
+    sudo \
     vim \
     zip \
     gcc
@@ -24,33 +28,35 @@ RUN \
   apt-get -y install locales && \
   locale-gen "en_US.UTF-8" && \
   update-locale LANG=en_US.UTF-8
-
 ENV LANG=en_US.UTF-8
 
-# ----- USER H2O -----
+# ----- USER H2OAI -----
 
-# h2o user
+# h2oai user
 RUN \
-  useradd -ms /bin/bash h2o && \
-  usermod -a -G sudo h2o && \
-  echo "h2o:h2o" | chpasswd && \
-  echo 'h2o ALL=NOPASSWD: ALL' >> /etc/sudoers
+  useradd -ms /bin/bash h2oai && \
+  usermod -a -G sudo h2oai && \
+  echo "h2oai:h2oai" | chpasswd && \
+  echo 'h2oai ALL=NOPASSWD: ALL' >> /etc/sudoers
 
-USER h2o
-ENV HOME="/home/h2o"
+USER h2oai
+ENV HOME="/home/h2oai"
 WORKDIR ${HOME}
 
 # Install Miniconda
 ENV MINICONDA_FILE=Miniconda3-latest-Linux-x86_64.sh
+ENV CONDA_PATH=${HOME}/miniconda3
+#ENV CONDA_PATH=/opt/miniconda3
 RUN \
   wget https://repo.anaconda.com/miniconda/${MINICONDA_FILE} && \
-  bash ${MINICONDA_FILE} -b -p ${HOME}/miniconda3 && \
-  rm ${MINICONDA_FILE}
+  bash ${MINICONDA_FILE} -b -p ${CONDA_PATH} && \
+  rm ${MINICONDA_FILE} && \
+  ${CONDA_PATH}/bin/conda init bash
 
-ENV PATH="${HOME}/miniconda3/bin/:$PATH"
+ENV PATH="${CONDA_PATH}/bin/:$PATH"
 
 # Create conda environment for scoring
-ENV CONDA="scoring_h2oai_experiment"
+ENV CONDA="scoring"
 RUN \
   conda config --env --add channels conda-forge && \
   conda create --name ${CONDA} \
@@ -76,34 +82,15 @@ RUN \
 # ADD CONTENT HERE
 ######################################################################
 
-COPY --chown=h2o docker/scorer.zip ${HOME}/
-COPY --chown=h2o docker/card_aws_lambda.sh ${HOME}/
-COPY --chown=h2o docker/card_test.json ${HOME}/
+COPY --chown=h2oai docker/scorer.zip ${HOME}/
+COPY --chown=h2oai docker/card_aws_lambda.sh ${HOME}/
+COPY --chown=h2oai docker/card_test.json ${HOME}/
+COPY --chown=h2oai docker/license.sig ${HOME}/.driverlessai/
 
-#COPY --chown=h2o docker/license.sig ${HOME}/.driverlessai/
+RUN echo "source activate scoring" >> ~/.bashrc
 
 # Scoring-pipeline
-#RUN \
-#  unzip scorer.zip
-
-#
-#
-## Miniconda
-#ENV MINICONDA_FILE=Miniconda3-4.5.4-Linux-x86_64.sh
-#RUN \
-#  wget https://repo.continuum.io/miniconda/${MINICONDA_FILE} && \
-#  bash ${MINICONDA_FILE} -b 
-#  /home/h2o/Miniconda3/bin/conda create -y --name pysparkling python=2.7 anaconda && \
-#  /home/h2o/Miniconda3/bin/conda create -y --name h2o python=3.6 anaconda && \
-#  /home/h2o/Miniconda3/envs/h2o/bin/jupyter notebook --generate-config && \
-#  sed -i "s/#c.NotebookApp.token = '<generated>'/c.NotebookApp.token = 'h2o'/" .jupyter/jupyter_notebook_config.py && \
-#  rm ${MINICONDA_FILE}
-#
-
-#COPY --chown=h2o conf/pyspark/00-pyspark-setup.py /home/h2o/.ipython/profile_pyspark/startup/
-#COPY --chown=h2o conf/pyspark/kernel.json /home/h2o/Miniconda3/envs/h2o/share/jupyter/kernels/pyspark/
-#ENV SPARKLING_WATER_HOME=/home/h2o/bin/sparkling-water
-
-
-
-#######################################################################
+RUN \
+  unzip scorer.zip && \
+  source activate scoring && \
+  pip install scoring-pipeline/*.whl
