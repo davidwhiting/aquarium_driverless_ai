@@ -8,13 +8,13 @@ import math
 from h2oai_client import Client, ModelParameters, InterpretParameters
 
 address = 'http://52.90.67.220:12345'
-
 username = 'training'
 password = 'training'
 
 h2oai = Client(address = address
                , username = username
                , password = password)
+
 
 def splitTrainingData(dataPath, basename, target, ratio = 0.8, time=''):
 	data = h2oai.create_dataset_sync(dataPath)
