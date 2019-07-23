@@ -1,4 +1,4 @@
-pclass,survived,name,"name2",sex,age,sibsp,parch,ticket,fare,cabin,embarked,boat,body,home.dest
+pclass,survived,name,"no.title",sex,age,sibsp,parch,ticket,fare,cabin,embarked,boat,body,home.dest
 3,0,"Abbing, Mr. Anthony","Abbing,  Anthony",male,42,0,0,C.A. 5547,7.5500,,S,,,
 3,0,"Abbott, Master. Eugene Joseph","Abbott,  Eugene Joseph",male,13,0,2,C.A. 2673,20.2500,,S,,,"East Providence, RI"
 3,0,"Abbott, Mr. Rossmore Edward","Abbott,  Rossmore Edward",male,16,1,1,C.A. 2673,20.2500,,S,,190,"East Providence, RI"
