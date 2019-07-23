@@ -1,0 +1,158 @@
+FROM ubuntu:18.04
+LABEL maintainer="David Whiting <david.whiting@h2o.ai>"
+
+SHELL ["/bin/bash", "-c"]
+
+ARG BASE=/home/h2o/bin
+ARG CONDA_HOME=${BASE}/miniconda3
+
+ARG RSTUDIO_VERSION=1.2.1335
+ARG CONDA_PYTHON_H2O=3.6
+
+##### DON'T CHANGE ARG OR ENV BELOW ############
+
+ENV LANG=en_US.UTF-8
+
+# To keep tzdata from requesting time zones interactively
+ARG DEBIAN_FRONTEND=noninteractive
+
+ARG RSTUDIO=rstudio-server-${RSTUDIO_VERSION}-amd64.deb
+ARG MINICONDA_FILE=Miniconda3-latest-Linux-x86_64.sh
+ARG CONDA=${CONDA_HOME}/bin/conda
+
+## Linux
+RUN \
+  apt-get -y update \
+  && apt-get -y install \
+        apt-transport-https \
+        apt-utils \
+        bzip2 \
+        clinfo \
+        cpio \
+        curl \
+        dirmngr \
+        gcc \
+        gdebi-core \
+        git \
+        less \
+        libcurl4-nss-dev \
+        libopenblas-dev \
+        locales \
+        net-tools \
+        opencl-headers \
+        software-properties-common \
+        sudo \
+        vim \
+        wget \
+        zip \
+  && locale-gen en_US.UTF-8 \
+  && update-locale LANG=en_US.UTF-8 
+
+# Install OpenCL
+RUN \
+  apt-get -y install ocl-icd-opencl-dev \
+  && mkdir -p /etc/OpenCL/vendors \
+  && echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+
+# Install Java 8
+RUN \
+  apt-get -y install \
+        openjdk-8-jre \
+        openjdk-8-jdk 
+
+# Install R 3.6
+RUN \
+  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9 \
+  && echo "deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/" >> /etc/apt/sources.list \
+  && apt-get -y update  \
+  && apt-get -y install \
+        r-base \
+        r-base-dev \
+  && R -e 'chooseCRANmirror(graphics=FALSE, ind=1);install.packages(c("RCurl","jsonlite","ggplot2","Rcpp","data.table"));' \
+  && mkdir -p /usr/local/lib/R/site-library \
+  && chmod 777 /usr/local/lib/R/site-library 
+
+# RStudio Install
+RUN \
+  wget https://download2.rstudio.org/server/trusty/amd64/${RSTUDIO} \
+  && gdebi --non-interactive ${RSTUDIO} \
+  && echo "server-app-armor-enabled=0" >> /etc/rstudio/rserver.conf \
+  && rm ${RSTUDIO} 
+
+#### Log directory used by run.sh
+###RUN \
+###  mkdir /log \
+###  && chmod o+w /log
+
+# ----- USER H2O -----
+
+# h2o user
+RUN \
+  useradd -ms /bin/bash h2o && \
+  usermod -a -G sudo h2o && \
+  echo "h2o:h2o" | chpasswd && \
+  echo 'h2o ALL=NOPASSWD: ALL' >> /etc/sudoers
+
+USER h2o
+WORKDIR /home/h2o
+
+ARG MOJO_PYTHON=daimojo-2.0.1+master.478-cp36-cp36m-linux_x86_64.whl
+ARG MOJO_R=daimojo_2.0.1.tar.gz
+ARG MOJO=mojo-1.7.0.zip
+ARG SCORER=scorer-1.7.0.zip
+
+ARG EXPERIMENT=card
+
+COPY --chown=h2o ${EXPERIMENT}/${MOJO_PYTHON} ${MOJO_PYTHON}
+COPY --chown=h2o ${EXPERIMENT}/${MOJO_R} ${MOJO_R}
+COPY --chown=h2o ${EXPERIMENT}/${MOJO} ${MOJO}
+COPY --chown=h2o ${EXPERIMENT}/${SCORER} scorer.zip
+
+# Install Miniconda
+RUN \
+  wget https://repo.anaconda.com/miniconda/${MINICONDA_FILE} \
+  && bash ${MINICONDA_FILE} -b -p ${CONDA_HOME} \
+  && ${CONDA} update -n base -c defaults conda \
+  && rm ${MINICONDA_FILE}
+
+## Install Python MOJO and Scoring Package
+RUN \
+  ${CONDA} create -y --name h2o python=${CONDA_PYTHON_H2O} anaconda \
+  && bash -c "source ${CONDA_HOME}/bin/activate h2o && pip install ${MOJO_PYTHON}" \
+  && rm ${MOJO_PYTHON} \
+  && R CMD INSTALL ${MOJO_R} \
+  && rm ${MOJO_R} 
+#  && unzip ${SCORER} \
+#  && cd scoring-pipeline \
+#  && source ${CONDA_HOME}/bin/activate h2o \
+#  && pip install *whl 
+#  && ${CONDA_HOME}/envs/h2o/bin/jupyter notebook --generate-config \
+#  && sed -i "s/#c.NotebookApp.token = '<generated>'/c.NotebookApp.token = 'h2o'/" /home/h2o/.jupyter/jupyter_notebook_config.py \
+#  && R CMD INSTALL ${H2O_DIRECTORY}/R/h2o*.gz \
+#  && rm -rf ${H2O_DIRECTORY} 
+
+### Copy templates and substitute for versions
+#COPY --chown=h2o templates/pyspark/00-pyspark-setup.py /home/h2o/.ipython/profile_pyspark/startup/
+#COPY --chown=h2o templates/pyspark/kernel.json ${KERNEL}
+
+##########################################################################
+##### ADD CONTENT FOR INDIVIDUAL HANDS-ON SESSIONS HERE
+##########################################################################
+####
+####COPY --chown=h2o contents/data data
+####COPY --chown=h2o contents/h2o-3_hands_on h2o-3_hands_on
+####COPY --chown=h2o contents/sparkling_water_hands_on sparkling_water_hands_on
+####
+
+##########################################################################
+
+# ----- RUN INFORMATION -----
+
+USER h2o
+WORKDIR /home/h2o
+ENV JAVA_HOME=/usr
+
+#ENTRYPOINT ["/run.sh"]
+
+EXPOSE 8888
+EXPOSE 8787
