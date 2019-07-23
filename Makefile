@@ -3,24 +3,26 @@ USER = h2oai
 
 default: buildclean
 
-build: 
+# save data
+push:
+	s3cmd sync contents/data/ s3://whiting-aquarium-dai/contents/data/
+
+# retrieve data
+fetch:
+	mkdir -p contents/data
+	s3cmd sync s3://whiting-aquarium-dai/contents/data/ contents/data/
+
+build: 	fetch
 	docker build -t ${NAME} -f Dockerfile .
 
-buildnew: 
+buildnew: fetch
 	docker build --no-cache --pull -t ${NAME} -f Dockerfile .
 
-buildclean:
+buildclean: fetch
 	docker build --no-cache -t ${NAME} -f Dockerfile .
 
 run:
 	docker run -it --rm -u ${USER}:${USER} ${NAME} /bin/bash
-
-#fetch:
-#	mkdir -p s3
-#	s3cmd sync s3://h2o-tutorials/ s3/
-
-#build: fetch
-#	docker build -t opsh2oai/h2o-training -f Dockerfile .
 
 #save:
 #	docker save opsh2oai/h2o-training | pigz -c > h2o-training.gz
