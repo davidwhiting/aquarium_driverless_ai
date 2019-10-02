@@ -83,15 +83,15 @@ RUN \
 # ADD CONTENT HERE
 ######################################################################
 
-COPY --chown=h2oai docker/scorer.zip ${HOME}/
-COPY --chown=h2oai docker/card_aws_lambda.sh ${HOME}/
-COPY --chown=h2oai docker/card_test.json ${HOME}/
-COPY --chown=h2oai docker/license.sig ${HOME}/.driverlessai/
+#COPY --chown=h2oai docker/scorer.zip ${HOME}/
+#COPY --chown=h2oai docker/card_aws_lambda.sh ${HOME}/
+#COPY --chown=h2oai docker/card_test.json ${HOME}/
+#COPY --chown=h2oai docker/license.sig ${HOME}/.driverlessai/
 
 RUN echo "source activate scoring" >> ~/.bashrc
 
-# Scoring-pipeline
-RUN \
-  unzip scorer.zip && \
-  source activate scoring && \
-  pip install scoring-pipeline/*.whl
+## Scoring-pipeline
+#RUN \
+#  unzip scorer.zip && \
+#  source activate scoring && \
+#  pip install scoring-pipeline/*.whl

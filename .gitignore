@@ -4,3 +4,4 @@ __pycache__
 .#*
 scorer*.zip
 contents/data/
+docker/mojo-pipeline/
