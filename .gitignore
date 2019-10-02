@@ -2,6 +2,5 @@
 license.sig
 __pycache__
 .#*
-scorer*.zip
 contents/data/
-docker/mojo-pipeline/
+training/docker/mojo-pipeline/
