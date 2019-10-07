@@ -31,13 +31,6 @@ RUN \
   update-locale LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 
-# Install Java 8
-RUN \
-  apt-get -y install \
-        openjdk-8-jre \
-        openjdk-8-jdk 
-
-
 # ----- USER H2OAI -----
 
 # h2oai user
@@ -91,26 +84,14 @@ RUN \
 ######################################################################
 
 COPY --chown=h2oai docker/scorer.zip ${HOME}/
-COPY --chown=h2oai docker/mojo.zip ${HOME}/
-COPY --chown=h2oai docker/daimojo* ${HOME}/
-
+COPY --chown=h2oai docker/card_aws_lambda.sh ${HOME}/
+COPY --chown=h2oai docker/card_test.json ${HOME}/
 COPY --chown=h2oai docker/license.sig ${HOME}/.driverlessai/
 
-## Mojo Scoring Pipeline
+RUN echo "source activate scoring" >> ~/.bashrc
+
+# Scoring-pipeline
 RUN \
-  unzip mojo.zip \
-  && ln ${HOME}/.driverlessai/license.sig ${HOME}/mojo-pipeline/license.sig
-
-# Python Scoring-pipeline
-RUN \
-  unzip scorer.zip \
-  && source ${CONDA_PATH}/bin/activate ${CONDA} \
-  && pip install scoring-pipeline/*.whl
-
-#COPY --chown=h2oai docker/card_aws_lambda.sh ${HOME}/
-#COPY --chown=h2oai docker/card_test.json ${HOME}/
-
-
-RUN \
-  echo "source activate ${CONDA}" >> ~/.bashrc
-
+  unzip scorer.zip && \
+  source activate scoring && \
+  pip install scoring-pipeline/*.whl

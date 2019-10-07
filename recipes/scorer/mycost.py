@@ -1,5 +1,4 @@
 """Using hard-coded dollar amounts x for false positives and y for false negatives, calculate the cost of a model using: `x * FP + y * FN`"""
-
 import typing
 import numpy as np
 from h2oaicore.metrics import CustomScorer
