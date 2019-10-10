@@ -14,17 +14,18 @@ h2oai = Client(address = address
                , username = username
                , password = password)
 
-dataPath = '/data/Training/CreditCard.csv'
-basename = 'Card'
-target = 'Default'
-ratio = 0.8
-dropped = []
+### Amaxon Reviews
 
-card_data = h2oai.create_dataset_sync(dataPath)
+dataPath = '/data/Training/AmazonFineFoodReviews.csv'
+basename = 'Reviews'
+target = 'PositiveReview'
+ratio = 0.8
+
+reviews_data = h2oai.create_dataset_sync(dataPath)
 
 # Split the data
-card_split_data = h2oai.make_dataset_split(
-    dataset_key = card_data.key
+reviews_split_data = h2oai.make_dataset_split(
+    dataset_key = reviews_data.key
     , output_name1 = basename + "_train"
     , output_name2 = basename + "_test"
     , target = target
@@ -34,13 +35,15 @@ card_split_data = h2oai.make_dataset_split(
     , seed = 1234
 )
 
-train_key = h2oai.get_dataset_split_job(card_split_data).entity[0]
-test_key  = h2oai.get_dataset_split_job(card_split_data).entity[1]
+train_key = h2oai.get_dataset_split_job(reviews_split_data).entity[0]
+test_key  = h2oai.get_dataset_split_job(reviews_split_data).entity[1]
 
-# Card Default
-knobs = [6, 4, 6]
-card_default = h2oai.start_experiment_sync(
-      experiment_name = "Card Default"
+# Reviews Default
+
+dropped = ['UserID', 'ProductId', 'Id', 'Summary', 'Score', 'HelpfulnessDenominator', 'HelpfulnessNumerator', 'ProfileName', 'Time']
+knobs = [8, 2, 7]
+reviews1 = h2oai.start_experiment_sync(
+      experiment_name = "Reviews NLP Big"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
@@ -52,10 +55,9 @@ card_default = h2oai.start_experiment_sync(
     , cols_to_drop = dropped
 )
 
-# Card Monotonic
-knobs = [6, 4, 7]
-card_monotonic = h2oai.start_experiment_sync(
-      experiment_name = "Card Monotonic"
+knobs = [6, 2, 7]
+reviews2 = h2oai.start_experiment_sync(
+      experiment_name = "Reviews NLP"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
@@ -67,10 +69,9 @@ card_monotonic = h2oai.start_experiment_sync(
     , cols_to_drop = dropped
 )
 
-# Card Big
-knobs = [8, 6, 7]
-card_big = h2oai.start_experiment_sync(
-      experiment_name = "Card Big"
+dropped = ['UserID', 'ProductId', 'Id', 'Score', 'HelpfulnessDenominator', 'HelpfulnessNumerator', 'ProfileName', 'Time']
+reviews3 = h2oai.start_experiment_sync(
+      experiment_name = "Reviews NLP+"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
@@ -82,10 +83,9 @@ card_big = h2oai.start_experiment_sync(
     , cols_to_drop = dropped
 )
 
-# Card GLM
-knobs = [6, 4, 7]
-card_glm = h2oai.start_experiment_sync(
-      experiment_name = "Card GLM"
+dropped = ['Score', 'ProfileName', 'Time']
+reviews4 = h2oai.start_experiment_sync(
+      experiment_name = "Reviews NLP++"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
@@ -95,13 +95,11 @@ card_glm = h2oai.start_experiment_sync(
     , interpretability = knobs[2]
     , enable_gpus = True
     , cols_to_drop = dropped
-    , config_overrides = "included_models = ['GLM']"
 )
 
-# Card Compliant
-knobs = [6, 4, 7]
-card_compliant = h2oai.start_experiment_sync(
-      experiment_name = "Card Compliant"
+dropped = ['Summary', 'Score', 'Description', 'ProfileName', 'Time']
+reviews5 = h2oai.start_experiment_sync(
+      experiment_name = "Reviews -NLP"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
@@ -111,6 +109,4 @@ card_compliant = h2oai.start_experiment_sync(
     , interpretability = knobs[2]
     , enable_gpus = True
     , cols_to_drop = dropped
-    , config_overrides = "recipe = 'compliant'"
 )
-

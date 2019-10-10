@@ -14,16 +14,18 @@ h2oai = Client(address = address
                , username = username
                , password = password)
 
-dataPath = '/data/Training/BostonHousing.csv'
-basename = 'Housing'
-target = 'VALUE'
+
+### Diabetes Models
+dataPath = '/data/Training/PimaDiabetes.csv'
+basename = 'Diabetes'
+target = 'Outcome'
 ratio = 0.8
 
-boston_data = h2oai.create_dataset_sync(dataPath)
+diabetes_data = h2oai.create_dataset_sync(dataPath)
 
 # Split the data
-boston_split_data = h2oai.make_dataset_split(
-    dataset_key = boston_data.key
+diabetes_split_data = h2oai.make_dataset_split(
+    dataset_key = diabetes_data.key
     , output_name1 = basename + "_train"
     , output_name2 = basename + "_test"
     , target = target
@@ -33,39 +35,36 @@ boston_split_data = h2oai.make_dataset_split(
     , seed = 1234
 )
 
-train_key = h2oai.get_dataset_split_job(boston_split_data).entity[0]
-test_key  = h2oai.get_dataset_split_job(boston_split_data).entity[1]
+train_key = h2oai.get_dataset_split_job(diabetes_split_data).entity[0]
+test_key  = h2oai.get_dataset_split_job(diabetes_split_data).entity[1]
 dropped = []
 
-# Housing Experiment #1
-knobs = [7, 2, 8]
-housing1 = h2oai.start_experiment_sync(
-      experiment_name = "Housing"
+# Diabetes Default
+knobs = [8, 2, 8]
+diabetes1 = h2oai.start_experiment_sync(
+      experiment_name = "Diabetes"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
-    , is_classification = False
+    , is_classification = True
     , accuracy = knobs[0]
     , time = knobs[1]
     , interpretability = knobs[2]
-    , scorer = 'RMSE'
     , enable_gpus = True
     , cols_to_drop = dropped
 )
 
-# Housing Experiment #2
-knobs = [4, 2, 8]
-housing2 = h2oai.start_experiment_sync(
-      experiment_name = "Housing Quick"
+# Diabetes GLM
+diabetes2 = h2oai.start_experiment_sync(
+      experiment_name = "Diabetes GLM"
     , dataset_key = train_key
     , testset_key = test_key
     , target_col = target
-    , is_classification = False
+    , is_classification = True
     , accuracy = knobs[0]
     , time = knobs[1]
     , interpretability = knobs[2]
-    , scorer = 'RMSE'
     , enable_gpus = True
     , cols_to_drop = dropped
+    , config_overrides = "included_models = ['GLM']"
 )
-
