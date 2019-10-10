@@ -35,8 +35,8 @@ titanic_split_data = h2oai.make_dataset_split(
     , seed = 1234
 )
 
-train_key = h2oai.get_dataset_split_job(card_split_data).entity[0]
-test_key  = h2oai.get_dataset_split_job(card_split_data).entity[1]
+train_key = h2oai.get_dataset_split_job(titanic_split_data).entity[0]
+test_key  = h2oai.get_dataset_split_job(titanic_split_data).entity[1]
 
 knobs = [8, 2, 8]
 

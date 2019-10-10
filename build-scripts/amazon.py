@@ -55,6 +55,23 @@ reviews1 = h2oai.start_experiment_sync(
     , cols_to_drop = dropped
 )
 
+reviews1a = h2oai.start_experiment_sync(
+      experiment_name = "Reviews NLP Big TF"
+    , dataset_key = train_key
+    , testset_key = test_key
+    , target_col = target
+    , is_classification = True
+    , accuracy = knobs[0]
+    , time = knobs[1]
+    , interpretability = knobs[2]
+    , enable_gpus = True
+    , cols_to_drop = dropped
+    , config_overrides = """
+        recipe = 'TextCNNTransformer'
+        recipe = 'TextBiGRUTransformer'
+    """
+)
+
 knobs = [6, 2, 7]
 reviews2 = h2oai.start_experiment_sync(
       experiment_name = "Reviews NLP"
